@@ -6,7 +6,10 @@ use nom::{bytes, error, Err, IResult};
 fn parse_until_null_byte(unparsed_data: &[u8]) -> IResult<&[u8], Vec<u8>> {
     let (unparsed_data, parse_result) =
         bytes::streaming::take_till::<_, _, error::Error<_>>(|b| b == 0x00)(unparsed_data)?;
-    let (unparsed_data, _) = bytes::streaming::take_while_m_n(0, 1, |b| b == 0x00)(unparsed_data)?;
+    // make sure we always process _something_
+    let minimal_null_bytes = if parse_result.len() == 0 { 1 } else { 0 };
+    let (unparsed_data, _) = bytes::streaming::take_while_m_n(
+        minimal_null_bytes, 1, |b| b == 0x00)(unparsed_data)?;
     Ok((unparsed_data, parse_result.to_vec()))
 }
 
@@ -14,6 +17,7 @@ fn parse_until_null_byte(unparsed_data: &[u8]) -> IResult<&[u8], Vec<u8>> {
 
 /// We will read the file in chunks of this size
 const CHUNK_SIZE: usize = 8;
+#[derive(Debug)]
 pub struct FileIterator {
     file: File,
 }
