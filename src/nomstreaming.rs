@@ -35,8 +35,6 @@ impl Iterator for FileIterator {
         let mut buffer: Vec<u8> = vec![0u8; CHUNK_SIZE];
         let len = self.file.read(&mut buffer).expect("Cannot read file");
         if len == 0 {
-            // For now assuming EOF; probably in production code you might want to do something
-            // else
             None
         } else {
             buffer.truncate(len);
